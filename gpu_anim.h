@@ -50,7 +50,7 @@ struct GPUAnimBitmap {
     cudaGraphicsResource *resource;
     int     width, height;
     void    *dataBlock;
-    void (*fAnim)(uchar4*,void*,int);
+    void (*fAnim)(uchar4*,void*,int&,int&);
     void (*animExit)(void*);
     void (*clickDrag)(void*,int,int,int,int);
     void (*passiveMotion)(void*,int,int);
@@ -128,7 +128,7 @@ struct GPUAnimBitmap {
         keyFunc = f;
     }
 
-    void anim_and_exit( void (*f)(uchar4*,void*,int), void(*e)(void*) ) {
+    void anim_and_exit( void (*f)(uchar4*,void*,int&,int&), void(*e)(void*) ) {
         GPUAnimBitmap**   bitmap = get_bitmap_ptr();
         *bitmap = this;
         fAnim = f;
@@ -176,6 +176,7 @@ struct GPUAnimBitmap {
     // static method used for glut callbacks
     static void idle_func( void ) {
         static int ticks = 1;
+        static int timebase = 0;
         GPUAnimBitmap*  bitmap = *(get_bitmap_ptr());
         uchar4*         devPtr;
         size_t  size;
@@ -183,7 +184,8 @@ struct GPUAnimBitmap {
         HANDLE_ERROR( cudaGraphicsMapResources( 1, &(bitmap->resource), NULL ) );
         HANDLE_ERROR( cudaGraphicsResourceGetMappedPointer( (void**)&devPtr, &size, bitmap->resource) );
 
-        bitmap->fAnim( devPtr, bitmap->dataBlock, ticks++ );
+        bitmap->fAnim( devPtr, bitmap->dataBlock, ticks, timebase );
+        ticks++;
 
         HANDLE_ERROR( cudaGraphicsUnmapResources( 1, &(bitmap->resource), NULL ) );
 

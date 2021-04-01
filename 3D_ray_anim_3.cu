@@ -331,12 +331,20 @@ struct DataBlock{
     bool isLockCursorInWindow = false;
 };
 
-void generate_frame( uchar4 *pixels, void *dataBlock, int ticks ) {
+void generate_frame( uchar4 *pixels, void *dataBlock, int &ticks, int &timebase ) {
     int DIM_W = (int)(((Photo *)((DataBlock *)dataBlock)->cpu_photo)->width);
     int DIM_H = (int)(((Photo *)((DataBlock *)dataBlock)->cpu_photo)->height);
     dim3    grids(DIM_W/16,DIM_H/16);
     dim3    threads(16,16);
     kernel_3D<<<grids,threads>>>( pixels, ((DataBlock *)dataBlock)->sphere, ((DataBlock *)dataBlock)->ground, ((DataBlock *)dataBlock)->plane, ((DataBlock *)dataBlock)->photo, ((DataBlock *)dataBlock)->light, ((DataBlock *)dataBlock)->image );
+    int time = glutGet(GLUT_ELAPSED_TIME);
+    char s[100] = {0};
+    if(time - timebase > 1000){
+        sprintf(s, "FPS:%4.2f", ticks * 1000.0 / (time - timebase));
+        timebase = time;
+        ticks = 1;
+        printf("帧率为：%s\n", s);
+    }
 }
 
 void point(void *dataBlock, int x, int y){
@@ -362,7 +370,6 @@ void point(void *dataBlock, int x, int y){
             photo->photoDir.x = dir_x / norm;
             photo->photoDir.y = dir_y / norm;
             photo->photoDir.z = dir_z / norm;
-            
             glutWarpPointer(DIM_W/2,DIM_H/2);
             HANDLE_ERROR( cudaMemcpy( ((DataBlock *)dataBlock)->photo, ((DataBlock *)dataBlock)->cpu_photo, sizeof(Photo), cudaMemcpyHostToDevice ) );
         }
@@ -516,6 +523,6 @@ int main(void){
     bitmap.passive_motion( (void (*)(void*,int,int))point );
     bitmap.key_func( (void (*)(unsigned char,int,int,void*))keyFunc );
     bitmap.anim_and_exit(
-        (void (*)(uchar4*,void*,int))generate_frame, (void (*)(void *))exit_func );
+        (void (*)(uchar4*,void*,int&,int&))generate_frame, (void (*)(void *))exit_func );
     return 0;
 }
