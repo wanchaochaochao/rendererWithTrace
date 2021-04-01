@@ -19,8 +19,17 @@
 
 #include "gl_helper.h"
 
-#include "cuda.h"
-#include "cuda_gl_interop.h"
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
+#include <device_launch_parameters.h>
+#include <EGL/egl.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glx.h>
+#include <cudaEGL.h>
+#include <cudaGL.h>
+#include "book.h"
 #include <iostream>
 using namespace std;
 
@@ -29,6 +38,11 @@ PFNGLBINDBUFFERARBPROC    glBindBuffer     = NULL;
 PFNGLDELETEBUFFERSARBPROC glDeleteBuffers  = NULL;
 PFNGLGENBUFFERSARBPROC    glGenBuffers     = NULL;
 PFNGLBUFFERDATAARBPROC    glBufferData     = NULL;
+
+//PFNGLBINDBUFFERPROC glBindBuffer = NULL;
+//PFNGLDELETEBUFFERSPROC glDeleteBuffers = NULL;
+//PFNGLGENBUFFERSPROC glGenBuffers = NULL;
+//PFNGLBUFFERDATAPROC glBufferData = NULL;
 
 
 struct GPUAnimBitmap {
@@ -42,6 +56,11 @@ struct GPUAnimBitmap {
     void (*passiveMotion)(void*,int,int);
     void (*keyFunc)(unsigned char,int,int,void*);
     int     dragStartX, dragStartY;
+
+    //PFNGLBINDBUFFERPROC glBindBuffer = (PFNGLBINDBUFFERPROC) eglGetProcAddress("glBindBuffer");
+    //PFNGLDELETEBUFFERSPROC glDeleteBuffers = (PFNGLDELETEBUFFERSPROC) eglGetProcAddress("glDeleteBuffers");
+    //PFNGLGENBUFFERSPROC glGenBuffers = (PFNGLGENBUFFERSPROC) eglGetProcAddress("glGenBuffers");
+    //PFNGLBUFFERDATAPROC glBufferData = (PFNGLBUFFERDATAPROC) eglGetProcAddress("glBufferData");
 
     GPUAnimBitmap( int w, int h, void *d = NULL ) {
         width = w;
@@ -73,6 +92,7 @@ struct GPUAnimBitmap {
         glDeleteBuffers = (PFNGLDELETEBUFFERSARBPROC)GET_PROC_ADDRESS("glDeleteBuffers");
         glGenBuffers    = (PFNGLGENBUFFERSARBPROC)GET_PROC_ADDRESS("glGenBuffers");
         glBufferData    = (PFNGLBUFFERDATAARBPROC)GET_PROC_ADDRESS("glBufferData");
+
 
         glGenBuffers( 1, &bufferObj );
         glBindBuffer( GL_PIXEL_UNPACK_BUFFER_ARB, bufferObj );

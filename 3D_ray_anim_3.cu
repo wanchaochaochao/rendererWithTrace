@@ -1,11 +1,15 @@
 #include<iostream>
 #include "book.h"
-#include "cuda.h"
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
+#include <device_launch_parameters.h>
 #include "gpu_anim.h"
 #include "lodepng.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include<string>
+#include <string>
+#include <math.h>
 
 #define INF 2e10f
 #define rnd( x )( x*rand() / RAND_MAX )
@@ -169,6 +173,7 @@ struct Plane{//平行于坐标轴的矩形平面
                 x0 = (hitPoint.x - point1.x)*w/(point2.x-point1.x);}
                 y0 = (point2.z - hitPoint.z)*h/(point2.z-point1.z);}
             else if(point1.x == point2.x){
+            //else{
                 x0 = (point2.y - hitPoint.y)*w/(point2.y-point1.y);
                 y0 = (point2.z - hitPoint.z)*h/(point2.z-point1.z);}
             color->x *= image[indexImage].imageData[(x0 + y0*w)*4];
@@ -507,7 +512,7 @@ int main(void){
     int DIM_W = data.cpu_photo->width;
     int DIM_H = data.cpu_photo->height;
     GPUAnimBitmap  bitmap( DIM_W, DIM_H, &data );
-    //bitmap.click_drag( (void (*)(void*,int,int,int,int))point );
+    bitmap.click_drag( (void (*)(void*,int,int,int,int))point );
     bitmap.passive_motion( (void (*)(void*,int,int))point );
     bitmap.key_func( (void (*)(unsigned char,int,int,void*))keyFunc );
     bitmap.anim_and_exit(
